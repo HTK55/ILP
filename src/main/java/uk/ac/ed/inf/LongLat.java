@@ -14,7 +14,7 @@ public class LongLat {
     }
 
     public double distanceTo(LongLat longLat) {
-        return Math.sqrt(Math.pow((this.longitude - longLat.longitude),2) + Math.pow((this.latitude - longLat.latitude),2));
+        return Math.sqrt(Math.pow((this.longitude - longLat.longitude), 2) + Math.pow((this.latitude - longLat.latitude), 2));
     }
 
     public boolean closeTo(LongLat longLat) {
@@ -24,14 +24,12 @@ public class LongLat {
     public LongLat nextPosition(int angle) {
         if (angle == -999) {
             return this;
-        }
-        else if (angle >= 0 && angle <= 360 && angle % 10 == 0) {
+        } else if (angle >= 0 && angle <= 360 && angle % 10 == 0) {
             double angleInRadians = Math.toRadians(angle);
             double newLongitude = this.longitude + Math.cos(angleInRadians) * 0.00015;
             double newLatitude = this.latitude + Math.sin(angleInRadians) * 0.00015;
-            return new LongLat(newLongitude,newLatitude);
-        }
-        else {
+            return new LongLat(newLongitude, newLatitude);
+        } else {
             throw new IllegalArgumentException("This is not a valid angle");
         }
     }

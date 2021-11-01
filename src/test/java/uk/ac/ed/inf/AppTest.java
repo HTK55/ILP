@@ -1,6 +1,8 @@
 package uk.ac.ed.inf;
 
 import org.junit.Test;
+import java.sql.Date;
+import java.util.ArrayList;
 
 import static org.junit.Assert.*;
 
@@ -127,68 +129,25 @@ public class AppTest {
     }
 
     @Test
-    public void testMenusOne() {
+    public void testMenus() {
         // The webserver must be running on port 9898 to run this test.
         Menus menus = new Menus("localhost", "9898");
-        int totalCost = menus.getDeliveryCost(
-                "Ham and mozzarella Italian roll"
-        );
-        // Don't forget the standard delivery charge of 50p
-        assertEquals(230 + 50, totalCost);
+        ArrayList<String> itemsOrdered = new ArrayList<>();
+        itemsOrdered.add("Can of Fanta");
+        itemsOrdered.add("Chicken and avocado wrap");
+        itemsOrdered.add("Hummus, falafel and spicy tomato French country roll");
+        Order order = new Order("1ad5f1ff",itemsOrdered);
+        order = menus.getDelivery(order);
+        int totalCost = order.getCostInPence();
+        assertEquals(230 + 400 + 75 + 50, totalCost);
     }
 
     @Test
-    public void testMenusTwo() {
-        // The webserver must be running on port 9898 to run this test.
-        Menus menus = new Menus("localhost", "9898");
-        int totalCost = menus.getDeliveryCost(
-                "Ham and mozzarella Italian roll",
-                "Salami and Swiss Italian roll"
-        );
-        // Don't forget the standard delivery charge of 50p
-        assertEquals(230 + 230 + 50, totalCost);
+    public void testDerby() {
+        Derby derby = new Derby("localhost","1527");
+        Date date = Date.valueOf("2023-12-31");
+        ArrayList<String> orders = derby.getOrderNosForDate(date);
+        assertTrue(orders.contains("1ad5f1ff"));
     }
-
-    @Test
-    public void testMenusThree() {
-        // The webserver must be running on port 9898 to run this test.
-        Menus menus = new Menus("localhost", "9898");
-        int totalCost = menus.getDeliveryCost(
-                "Ham and mozzarella Italian roll",
-                "Salami and Swiss Italian roll",
-                "Flaming tiger latte"
-        );
-        // Don't forget the standard delivery charge of 50p
-        assertEquals(230 + 230 + 460 + 50, totalCost);
-    }
-
-    @Test
-    public void testMenusFourA() {
-        // The webserver must be running on port 9898 to run this test.
-        Menus menus = new Menus("localhost", "9898");
-        int totalCost = menus.getDeliveryCost(
-                "Ham and mozzarella Italian roll",
-                "Salami and Swiss Italian roll",
-                "Flaming tiger latte",
-                "Dirty matcha latte"
-        );
-        // Don't forget the standard delivery charge of 50p
-        assertEquals(230 + 230 + 460 + 460 + 50, totalCost);
-    }
-
-    @Test
-    public void testMenusFourB() {
-        // The webserver must be running on port 9898 to run this test.
-        Menus menus = new Menus("localhost", "9898");
-        int totalCost = menus.getDeliveryCost(
-                "Flaming tiger latte",
-                "Dirty matcha latte",
-                "Strawberry matcha latte",
-                "Fresh taro latte"
-        );
-        // Don't forget the standard delivery charge of 50p
-        assertEquals(4 * 460 + 50, totalCost);
-    }
-
 
 }

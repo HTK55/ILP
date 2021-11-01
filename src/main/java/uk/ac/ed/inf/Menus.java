@@ -8,6 +8,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -40,30 +41,33 @@ public class Menus {
      * standard delivery cost to the price of the items, which we get by accessing the webserver. Fails if the server
      * cannot be accessed.
      *
-     * @param itemsOrdered the items wanting to be delivered
+     * @param order the items wanting to be delivered
      * @return the delivery cost in pence for the items ordered, if no items are available to be ordered, returns 0
      */
-    public int getDeliveryCost(String... itemsOrdered) {
+    public Order getDelivery(Order order) {
         int cost = STD_CHARGE;
+        ArrayList<String> deliveredFrom = new ArrayList<>();
         String urlString = "http://"+this.name+":"+this.port+"/menus/menus.json";
         HttpRequest request = HttpRequest.newBuilder().uri(URI.create(urlString)).build();
         try {
             HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
             List<Shop> shops = new Gson().fromJson(response.body(), new TypeToken<List<Shop>>(){}.getType());
-            for (String item : itemsOrdered) {
+            for (String item : order.getItemsOrdered()) {
                 for (Shop shop : shops) {
                     for (MenuItem menuItem : shop.getMenu()) {
                         if (item.equals(menuItem.getItem())) {
                             cost += menuItem.getPence();
+                            deliveredFrom.add(shop.getLocation());
                         }
                     }
                 }
             }
-            return cost;
+            order.setCostInPence(cost);
+            order.setDeliveredFrom(deliveredFrom);
         }
         catch (Exception e) {
             e.printStackTrace();
         }
-        return 0;
+        return order;
     }
 }

@@ -1,6 +1,9 @@
 package uk.ac.ed.inf;
 
 import org.junit.Test;
+
+import java.awt.geom.Line2D;
+import java.net.http.HttpClient;
 import java.sql.Date;
 import java.util.ArrayList;
 
@@ -14,6 +17,7 @@ public class AppTest {
     private final LongLat appletonTower = new LongLat(-3.186874, 55.944494);
     private final LongLat businessSchool = new LongLat(-3.1873,55.9430);
     private final LongLat greyfriarsKirkyard = new LongLat(-3.1928,55.9469);
+    public static final HttpClient client = HttpClient.newHttpClient();
 
     @Test
     public void testIsConfinedTrueA(){
@@ -128,26 +132,61 @@ public class AppTest {
         assertTrue(approxEq(nextPosition, appletonTower));
     }
 
+//    @Test
+//    public void testMenus() {
+//        // The webserver must be running on port 9898 to run this test.
+//        Menus menus = new Menus("localhost", "9898");
+//        ArrayList<String> itemsOrdered = new ArrayList<>();
+//        itemsOrdered.add("Can of Fanta");
+//        itemsOrdered.add("Chicken and avocado wrap");
+//        itemsOrdered.add("Hummus, falafel and spicy tomato French country roll");
+//        Order order = new Order("1ad5f1ff",itemsOrdered);
+//        order = menus.getDelivery(order);
+//        int totalCost = order.getCostInPence();
+//        assertEquals(230 + 400 + 75 + 50, totalCost);
+//        ArrayList<String> shopLocations = new ArrayList<>();
+//        shopLocations.add("pest.round.peanut");
+//        shopLocations.add("sketch.spill.puzzle");
+//        assertEquals(shopLocations,order.getDeliveredFrom());
+//    }
+
+//    @Test
+//    public void testDerbyGetOrderNosForDate() {
+//        Derby derby = new Derby("localhost","1527");
+//        Date date = Date.valueOf("2023-12-31");
+//        ArrayList<ArrayList<String>> orders = derby.getOrdersForDate(date);
+//        ArrayList<String> order = new ArrayList<>();
+//        order.add("1ad5f1ff");
+//        order.add("spell.stick.scale");
+//        assertTrue(orders.contains(order));
+//    }
+//
+//    @Test
+//    public void testDerbyGetItemsForOrderNo() {
+//        Derby derby = new Derby("localhost","1527");
+//        String orderNo = "1ad5f1ff";
+//        ArrayList<String> items = derby.getItemsForOrderNo(orderNo);
+//        assertTrue(items.contains("Can of Fanta"));
+//    }
+
     @Test
-    public void testMenus() {
-        // The webserver must be running on port 9898 to run this test.
-        Menus menus = new Menus("localhost", "9898");
-        ArrayList<String> itemsOrdered = new ArrayList<>();
-        itemsOrdered.add("Can of Fanta");
-        itemsOrdered.add("Chicken and avocado wrap");
-        itemsOrdered.add("Hummus, falafel and spicy tomato French country roll");
-        Order order = new Order("1ad5f1ff",itemsOrdered);
-        order = menus.getDelivery(order);
-        int totalCost = order.getCostInPence();
-        assertEquals(230 + 400 + 75 + 50, totalCost);
+    public void testDroneCrossesConfinementZoneFalse() {
+        Website website = new Website("localhost", "9898",client);
+        LongLat droneLoc = new LongLat(-3.186874, 55.944494);
+        ArrayList<Order> orders = new ArrayList<>();
+        Drone drone = new Drone(droneLoc,orders);
+        Line2D move = new Line2D.Double(-3.186874, 55.944494,-3.186103,55.944656);
+        assertFalse(drone.crossesConfineZone(website,move));
     }
 
     @Test
-    public void testDerby() {
-        Derby derby = new Derby("localhost","1527");
-        Date date = Date.valueOf("2023-12-31");
-        ArrayList<String> orders = derby.getOrderNosForDate(date);
-        assertTrue(orders.contains("1ad5f1ff"));
+    public void testDroneCrossesConfinementZoneTrue() {
+        Website website = new Website("localhost", "9898",client);
+        LongLat droneLoc = new LongLat(-3.186874, 55.944494);
+        ArrayList<Order> orders = new ArrayList<>();
+        Drone drone = new Drone(droneLoc,orders);
+        Line2D move = new Line2D.Double(-3.186874, 55.944494,-3.191065,55.945626);
+        assertTrue(drone.crossesConfineZone(website,move));
     }
 
 }

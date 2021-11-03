@@ -47,15 +47,21 @@ public class Derby {
         return statement;
     }
 
-    public ArrayList<String> getOrderNosForDate(Date date) {
-        ArrayList<String> orderList = new ArrayList<>();
+    public ArrayList<Order> getOrdersForDate(Date date, Website website) {
+        ArrayList<Order> orderList = new ArrayList<>();
         try {
             final String ordersQuery = "select * from orders where deliveryDate=(?)";
             PreparedStatement psOrderQuery = this.getConn().prepareStatement(ordersQuery);
             psOrderQuery.setDate(1, date);
             ResultSet resultSet = psOrderQuery.executeQuery();
             while (resultSet.next()) {
-                String order = resultSet.getString("orderNo");
+                String[] threeWords = resultSet.getString("deliverTo").split(".");
+                //Add error
+                String first = threeWords[0];
+                String second = threeWords[1];
+                String third = threeWords[2];
+                LongLat deliverTo = website.getLongLatFromWords(first,second,third);
+                Order order = new Order(resultSet.getString("orderNo"),deliverTo);
                 orderList.add(order);
             }
         }
@@ -63,6 +69,24 @@ public class Derby {
             e.printStackTrace();
         }
         return orderList;
+    }
+
+    public void getItemsForOrderNo(Order order) {
+        ArrayList<String> itemList = new ArrayList<>();
+        try {
+            final String ordersQuery = "select * from orderDetails where orderNo=(?)";
+            PreparedStatement psOrderQuery = this.getConn().prepareStatement(ordersQuery);
+            psOrderQuery.setString(1,order.getOrderNo());
+            ResultSet resultSet = psOrderQuery.executeQuery();
+            while (resultSet.next()) {
+                String item = resultSet.getString("item");
+                itemList.add(item);
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        order.setItemsOrdered(itemList);
     }
 
     public void createDeliveries() {

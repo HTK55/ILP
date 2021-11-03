@@ -5,21 +5,21 @@ import java.util.ArrayList;
 public class Order {
     private String orderNo;
     private ArrayList<String> itemsOrdered;
-    private ArrayList<String> deliveredFrom;
-    private String deliveredTo;
+    private ArrayList<LongLat> deliveredFrom;
+    private LongLat deliveredTo;
     private int costInPence;
 
-    public Order(String orderNo, ArrayList<String> itemsOrdered) {
+    public Order(String orderNo, LongLat deliveredTo) {
         this.orderNo = orderNo;
+        this.deliveredTo = deliveredTo;
+    }
+
+    public void setItemsOrdered(ArrayList<String> itemsOrdered) {
         this.itemsOrdered = itemsOrdered;
     }
 
-    public void setDeliveredFrom(ArrayList<String> deliveredFrom) {
+    public void setDeliveredFrom(ArrayList<LongLat> deliveredFrom) {
         this.deliveredFrom = deliveredFrom;
-    }
-
-    public void setDeliveredTo(String deliveredTo) {
-        this.deliveredTo = deliveredTo;
     }
 
     public void setCostInPence(int costInPence) {
@@ -34,11 +34,11 @@ public class Order {
         return itemsOrdered;
     }
 
-    public ArrayList<String> getDeliveredFrom() {
+    public ArrayList<LongLat> getDeliveredFrom() {
         return deliveredFrom;
     }
 
-    public String getDeliveredTo() {
+    public LongLat getDeliveredTo() {
         return deliveredTo;
     }
 

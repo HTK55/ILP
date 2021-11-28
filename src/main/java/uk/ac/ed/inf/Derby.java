@@ -55,13 +55,14 @@ public class Derby {
             psOrderQuery.setDate(1, date);
             ResultSet resultSet = psOrderQuery.executeQuery();
             while (resultSet.next()) {
-                String[] threeWords = (resultSet.getString("deliverTo")).split("\\.");
+                String w3w = resultSet.getString("deliverTo");
+                String[] threeWords = w3w.split("\\.");
                 //Add error
                 String first = threeWords[0];
                 String second = threeWords[1];
                 String third = threeWords[2];
                 LongLat deliverTo = website.getLongLatFromWords(first,second,third);
-                Order order = new Order(resultSet.getString("orderNo"),deliverTo);
+                Order order = new Order(resultSet.getString("orderNo"),deliverTo,w3w);
                 orderList.add(order);
             }
         }

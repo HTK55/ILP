@@ -19,14 +19,29 @@ public class App
     public static final HttpClient client = HttpClient.newHttpClient();
 
     public static void main(String[] args) {
-        String date = "2023-12-31";
+        //Date date = Date.valueOf((args[0]+"-"+args[1]+"-"+args[2]));
+        //String websitePort = args[3];
+        //String DerbyPort = args[4];
+        String date1 = "2023-12-31";
         Derby derbyClient = new Derby("localhost","1527");
         Website websiteClient = new Website("localhost","9898",client);
-        ArrayList<Order> orders = derbyClient.getOrdersForDate(Date.valueOf(date),websiteClient);
+        ArrayList<Order> orders = derbyClient.getOrdersForDate(Date.valueOf(date1),websiteClient);
+        ArrayList<String> shopNames = new ArrayList<>();
         ArrayList<Shop> shops = new ArrayList<>();
         for (Order order : orders) {
             derbyClient.getItemsForOrderNo(order);
             websiteClient.getDeliveryDetails(order);
+            for (int i = 0; i < order.getShops().size(); i++) {
+                if (!shopNames.contains(order.getShops().get(i))) {
+                    shopNames.add(order.getShops().get(i));
+                    Shop shop = new Shop(order.getShops().get(i), order.getDeliveredFrom().get(i));
+                    shop.addOrder(order);
+                    shops.add(shop);
+                }
+            }
+        }
+        for (Shop shop1 : shops) {
+            System.out.println(shop1.getName());
         }
         // Given date x
         // Get orders for date x

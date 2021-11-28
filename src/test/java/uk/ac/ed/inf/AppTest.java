@@ -132,23 +132,25 @@ public class AppTest {
         assertTrue(approxEq(nextPosition, appletonTower));
     }
 
-//    @Test
-//    public void testMenus() {
-//        // The webserver must be running on port 9898 to run this test.
-//        Menus menus = new Menus("localhost", "9898");
-//        ArrayList<String> itemsOrdered = new ArrayList<>();
-//        itemsOrdered.add("Can of Fanta");
-//        itemsOrdered.add("Chicken and avocado wrap");
-//        itemsOrdered.add("Hummus, falafel and spicy tomato French country roll");
-//        Order order = new Order("1ad5f1ff",itemsOrdered);
-//        order = menus.getDelivery(order);
-//        int totalCost = order.getCostInPence();
-//        assertEquals(230 + 400 + 75 + 50, totalCost);
-//        ArrayList<String> shopLocations = new ArrayList<>();
-//        shopLocations.add("pest.round.peanut");
-//        shopLocations.add("sketch.spill.puzzle");
-//        assertEquals(shopLocations,order.getDeliveredFrom());
-//    }
+    @Test
+    public void testMenus() {
+        // The webserver must be running on port 9898 to run this test.
+        Website website = new Website("localhost", "9898",client);
+        Derby derby = new Derby("localhost","1527");
+        ArrayList<String> itemsOrdered = new ArrayList<>();
+        itemsOrdered.add("Can of Fanta");
+        itemsOrdered.add("Chicken and avocado wrap");
+        itemsOrdered.add("Hummus, falafel and spicy tomato French country roll");
+        Order order = new Order("1ad5f1ff",appletonTower,"pest.round.peanut");
+        derby.getItemsForOrderNo(order);
+        website.getDeliveryDetails(order);
+        int totalCost = order.getCostInPence();
+        assertEquals(230 + 400 + 75 + 50, totalCost);
+        ArrayList<String> shopLocations = new ArrayList<>();
+        shopLocations.add("pest.round.peanut");
+        shopLocations.add("sketch.spill.puzzle");
+        assertEquals(shopLocations,order.getDeliveredFrom());
+    }
 
 //    @Test
 //    public void testDerbyGetOrderNosForDate() {

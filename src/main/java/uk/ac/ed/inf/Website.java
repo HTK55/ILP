@@ -96,12 +96,12 @@ public class Website {
     public void getDeliveryDetails(Order order) {
         int cost = STD_CHARGE;
         ArrayList<LongLat> deliveredFrom = new ArrayList<>();
+        ArrayList<String> shopNames = new ArrayList<>();
         String urlString = "http://"+this.name+":"+this.port+"/menus/menus.json";
         HttpRequest request = HttpRequest.newBuilder().uri(URI.create(urlString)).build();
         try {
             HttpResponse<String> response = this.client.send(request, HttpResponse.BodyHandlers.ofString());
-            ArrayList<ShopGson> shops = new Gson().fromJson(response.body(), new TypeToken<ArrayList<ShopGson>>() {
-            }.getType());
+            List<ShopGson> shops = new Gson().fromJson(response.body(), new TypeToken<List<ShopGson>>() {}.getType());
             for (String item : order.getItemsOrdered()) {
                 for (ShopGson shop : shops) {
                     for (MenuItem menuItem : shop.getMenu()) {
@@ -112,17 +112,20 @@ public class Website {
                             String first = threeWords[0];
                             String second = threeWords[1];
                             String third = threeWords[2];
-                            LongLat location = getLongLatFromWords(first, third, second);
+                            LongLat location = getLongLatFromWords(first, second, third);
+                            String shopName = shop.getName();
 
                             if (!deliveredFrom.contains(location)) {
                                 deliveredFrom.add(location);
+                                shopNames.add(shopName);
                             }
                         }
                     }
                 }
-                order.setCostInPence(cost);
-                order.setDeliveredFrom(deliveredFrom);
             }
+            order.setCostInPence(cost);
+            order.setDeliveredFrom(deliveredFrom);
+            order.setShops(shopNames);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -144,10 +147,10 @@ public class Website {
         return null;
     }
 
-    public ArrayList<Shop> getShopsFromOrders(ArrayList<Order> orders) {
-        for (Order order : orders) {
-            
-        }
-    }
+//    public ArrayList<Shop> getShopsFromOrders(ArrayList<Order> orders) {
+//        for (Order order : orders) {
+//            return
+//        }
+//    }
 
 }

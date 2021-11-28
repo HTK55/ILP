@@ -8,20 +8,24 @@ import java.util.ArrayList;
  */
 public class Shop {
     private final String name;
-    private final String location;
+    private final LongLat location;
     private ArrayList<Order> orders;
 
-    public Shop(String name, String location, ArrayList<Order> orders) {
+    public Shop(String name, LongLat location) {
         this.name = name;
         this.location = location;
-        this.orders = orders;
+        this.orders = new ArrayList<Order>();
+    }
+
+    public void addOrder(Order order) {
+        this.orders.add(order);
     }
 
     public String getName() {
         return name;
     }
 
-    public String getLocation() {
+    public LongLat getLocation() {
         return location;
     }
 

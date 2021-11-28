@@ -8,6 +8,7 @@ public class Order {
     private ArrayList<LongLat> deliveredFrom;
     private LongLat deliveredTo;
     private int costInPence;
+    //private double distanceCost; maybe
 
     public Order(String orderNo, LongLat deliveredTo) {
         this.orderNo = orderNo;
@@ -25,6 +26,8 @@ public class Order {
     public void setCostInPence(int costInPence) {
         this.costInPence = costInPence;
     }
+
+
 
     public String getOrderNo() {
         return orderNo;

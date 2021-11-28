@@ -55,7 +55,7 @@ public class Derby {
             psOrderQuery.setDate(1, date);
             ResultSet resultSet = psOrderQuery.executeQuery();
             while (resultSet.next()) {
-                String[] threeWords = resultSet.getString("deliverTo").split(".");
+                String[] threeWords = (resultSet.getString("deliverTo")).split("\\.");
                 //Add error
                 String first = threeWords[0];
                 String second = threeWords[1];

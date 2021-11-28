@@ -1,5 +1,7 @@
 package uk.ac.ed.inf;
 
+import java.util.Objects;
+
 /**
  * The LongLat class, used to represent a point on the map. Contains various methods to calculate values relating to locations.
  */
@@ -88,5 +90,18 @@ public class LongLat {
         } else {
             throw new IllegalArgumentException("This is not a valid angle");
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        LongLat longLat = (LongLat) o;
+        return Double.compare(longLat.longitude, longitude) == 0 && Double.compare(longLat.latitude, latitude) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(longitude, latitude);
     }
 }

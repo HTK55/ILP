@@ -6,15 +6,15 @@ import java.util.ArrayList;
  * A class used for Gson parsing the information on each shop from the webserver. Contains the name of a shop, the
  * what3words location of the shop and a list of menu items the shop offers.
  */
-public class Shop {
+public class ShopGson {
     private final String name;
     private final String location;
-    private ArrayList<Order> orders;
+    private final ArrayList<MenuItem> menu;
 
-    public Shop(String name, String location, ArrayList<Order> orders) {
+    public ShopGson(String name, String location, ArrayList<MenuItem> menu) {
         this.name = name;
         this.location = location;
-        this.orders = orders;
+        this.menu = menu;
     }
 
     public String getName() {
@@ -25,7 +25,7 @@ public class Shop {
         return location;
     }
 
-    public ArrayList<Order> getMenu() {
-        return orders;
+    public ArrayList<MenuItem> getMenu() {
+        return menu;
     }
 }

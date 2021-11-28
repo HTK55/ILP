@@ -169,24 +169,24 @@ public class AppTest {
 //        assertTrue(items.contains("Can of Fanta"));
 //    }
 
-    @Test
-    public void testDroneCrossesConfinementZoneFalse() {
-        Website website = new Website("localhost", "9898",client);
-        LongLat droneLoc = new LongLat(-3.186874, 55.944494);
-        ArrayList<Order> orders = new ArrayList<>();
-        Drone drone = new Drone(droneLoc,orders);
-        Line2D move = new Line2D.Double(-3.186874, 55.944494,-3.186103,55.944656);
-        assertFalse(drone.crossesConfineZone(website,move));
-    }
-
-    @Test
-    public void testDroneCrossesConfinementZoneTrue() {
-        Website website = new Website("localhost", "9898",client);
-        LongLat droneLoc = new LongLat(-3.186874, 55.944494);
-        ArrayList<Order> orders = new ArrayList<>();
-        Drone drone = new Drone(droneLoc,orders);
-        Line2D move = new Line2D.Double(-3.186874, 55.944494,-3.191065,55.945626);
-        assertTrue(drone.crossesConfineZone(website,move));
-    }
+//    @Test
+//    public void testDroneCrossesConfinementZoneFalse() {
+//        Website website = new Website("localhost", "9898",client);
+//        LongLat droneLoc = new LongLat(-3.186874, 55.944494);
+//        ArrayList<Order> orders = new ArrayList<>();
+//        Drone drone = new Drone(droneLoc,orders);
+//        Line2D move = new Line2D.Double(-3.186874, 55.944494,-3.186103,55.944656);
+//        assertFalse(drone.crossesConfineZone(website,move));
+//    }
+//
+//    @Test
+//    public void testDroneCrossesConfinementZoneTrue() {
+//        Website website = new Website("localhost", "9898",client);
+//        LongLat droneLoc = new LongLat(-3.186874, 55.944494);
+//        ArrayList<Order> orders = new ArrayList<>();
+//        Drone drone = new Drone(droneLoc,orders);
+//        Line2D move = new Line2D.Double(-3.186874, 55.944494,-3.191065,55.945626);
+//        assertTrue(drone.crossesConfineZone(website,move));
+//    }
 
 }

@@ -11,7 +11,8 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.sql.DatabaseMetaData;
 import java.sql.Date;
 import java.sql.ResultSet;
-import java.util.ArrayList;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class App
 {
@@ -22,6 +23,7 @@ public class App
         Derby derbyClient = new Derby("localhost","1527");
         Website websiteClient = new Website("localhost","9898",client);
         ArrayList<Order> orders = derbyClient.getOrdersForDate(Date.valueOf(date),websiteClient);
+        ArrayList<Shop> shops = new ArrayList<>();
         for (Order order : orders) {
             derbyClient.getItemsForOrderNo(order);
             websiteClient.getDeliveryDetails(order);

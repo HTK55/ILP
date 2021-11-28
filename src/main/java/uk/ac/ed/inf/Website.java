@@ -1,6 +1,6 @@
 package uk.ac.ed.inf;
 
-import com.google.gson.Gson;
+import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
@@ -8,12 +8,15 @@ import com.mapbox.geojson.Point;
 import com.mapbox.geojson.Polygon;
 
 import java.awt.geom.Line2D;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class Website {
@@ -97,18 +100,19 @@ public class Website {
         HttpRequest request = HttpRequest.newBuilder().uri(URI.create(urlString)).build();
         try {
             HttpResponse<String> response = this.client.send(request, HttpResponse.BodyHandlers.ofString());
-            List<Shop> shops = new Gson().fromJson(response.body(), new TypeToken<List<Shop>>(){}.getType());
+            ArrayList<ShopGson> shops = new Gson().fromJson(response.body(), new TypeToken<ArrayList<ShopGson>>() {
+            }.getType());
             for (String item : order.getItemsOrdered()) {
-                for (Shop shop : shops) {
+                for (ShopGson shop : shops) {
                     for (MenuItem menuItem : shop.getMenu()) {
-                        if (item.equals(menuItem.getItem())) {
+                        if (menuItem.getItem().equals(item)) { //reason for hashmap
                             cost += menuItem.getPence();
-                            String[] threeWords = shop.getLocation().split(".");
+                            String[] threeWords = shop.getLocation().split("\\.");
                             //Add error
                             String first = threeWords[0];
                             String second = threeWords[1];
                             String third = threeWords[2];
-                            LongLat location = getLongLatFromWords(first,third,second);
+                            LongLat location = getLongLatFromWords(first, third, second);
 
                             if (!deliveredFrom.contains(location)) {
                                 deliveredFrom.add(location);
@@ -116,9 +120,9 @@ public class Website {
                         }
                     }
                 }
+                order.setCostInPence(cost);
+                order.setDeliveredFrom(deliveredFrom);
             }
-            order.setCostInPence(cost);
-            order.setDeliveredFrom(deliveredFrom);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -139,4 +143,11 @@ public class Website {
         System.err.print("Error in What3Words: no location found");
         return null;
     }
+
+    public ArrayList<Shop> getShopsFromOrders(ArrayList<Order> orders) {
+        for (Order order : orders) {
+            
+        }
+    }
+
 }

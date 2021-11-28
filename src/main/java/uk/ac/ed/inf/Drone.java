@@ -53,18 +53,6 @@ public class Drone {
         return completedOrders;
     }
 
-    public boolean crossesConfineZone(Website website, Line2D move) {
-        ArrayList<ArrayList<Line2D>> confinementZone = website.getConfinementZone();
-        for (ArrayList<Line2D> polygon : confinementZone) {
-            for (Line2D line : polygon) {
-                if (move.intersectsLine(line)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     /**
      * Calculates the next position of the drone when given an angle. We use the convention that 0 means go East,
      * 90 means go North, 180 means go West, and 270 means go South, with the other multiples of ten between 0 and

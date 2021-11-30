@@ -6,9 +6,26 @@ import java.util.ArrayList;
 
 public class Pathfinder {
     public final ArrayList<ArrayList<Line2D>> confinementZone;
+    public final ArrayList<LongLat> landmarks;
+    private ArrayList<Shop> shops;
 
-    public Pathfinder(Website website) {
+    public Pathfinder(Website website, ArrayList<Shop> shops) {
         this.confinementZone = website.getConfinementZone();
+        this.landmarks = website.getLandmarks();
+        this.shops = shops;
+    }
+
+    public Shop getClosestShop(LongLat currLoc) {
+        Shop closest = this.shops.get(0);
+        double smallestDist = currLoc.distanceTo(this.shops.get(0).getLocation());
+        for (Shop shop : this.shops) {
+            double distance = currLoc.distanceTo(shop.getLocation());
+            if (distance < smallestDist) {
+                smallestDist = distance;
+                closest = shop;
+            }
+        }
+        return closest;
     }
 
     public void getClosestOrder(LongLat currLoc, ArrayList<Order> orders) {
@@ -22,15 +39,4 @@ public class Pathfinder {
         }
     }
 
-    public boolean crossesConfineZone(LongLat from, LongLat to) {
-        Line2D move = new Line2D.Double(from.longitude,from.latitude,to.longitude,to.latitude);
-        for (ArrayList<Line2D> polygon : this.confinementZone) {
-            for (Line2D line : polygon) {
-                if (move.intersectsLine(line)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
 }

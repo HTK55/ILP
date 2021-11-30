@@ -8,15 +8,12 @@ import com.mapbox.geojson.Point;
 import com.mapbox.geojson.Polygon;
 
 import java.awt.geom.Line2D;
-import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class Website {
@@ -146,11 +143,5 @@ public class Website {
         System.err.print("Error in What3Words: no location found");
         return null;
     }
-
-//    public ArrayList<Shop> getShopsFromOrders(ArrayList<Order> orders) {
-//        for (Order order : orders) {
-//            return
-//        }
-//    }
 
 }

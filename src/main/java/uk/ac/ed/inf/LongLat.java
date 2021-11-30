@@ -1,5 +1,7 @@
 package uk.ac.ed.inf;
 
+import java.awt.geom.Line2D;
+import java.util.ArrayList;
 import java.util.Objects;
 
 /**
@@ -24,8 +26,8 @@ public class LongLat {
     // the length of a drone move in degrees in a straight line
     static final double DIST_MOVED = 0.00015;
 
-    public double longitude;
-    public double latitude;
+    private double longitude;
+    private double latitude;
 
     /**
      * Class constructor.
@@ -36,6 +38,14 @@ public class LongLat {
     public LongLat(double longitude, double latitude) {
         this.longitude = longitude;
         this.latitude = latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public double getLatitude() {
+        return latitude;
     }
 
     /**
@@ -90,6 +100,54 @@ public class LongLat {
         } else {
             throw new IllegalArgumentException("This is not a valid angle");
         }
+    }
+
+    public boolean crossesConfineZone(LongLat longLat2, ArrayList<ArrayList<Line2D>> confinementZone) {
+        Line2D move = new Line2D.Double(this.longitude,this.latitude,longLat2.longitude,longLat2.latitude);
+        for (ArrayList<Line2D> polygon : confinementZone) {
+            for (Line2D line : polygon) {
+                if (move.intersectsLine(line)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public LongLat getClosestLandmark(LongLat longLat2, ArrayList<ArrayList<Line2D>> confinementZone, ArrayList<LongLat> landmarks) {
+        LongLat closest = landmarks.get(0);
+        double smallestDist = this.distanceTo(landmarks.get(0)) + landmarks.get(0).distanceTo(longLat2);
+        for (LongLat landmark : landmarks) { //again only 2 long, but left in in case we want to add more landmarks
+            double distance = this.distanceTo(landmark) + landmark.distanceTo(longLat2);
+            if (distance < smallestDist && !this.crossesConfineZone(landmark, confinementZone)) {
+                smallestDist = distance;
+                closest = landmark;
+            }
+        }
+        return closest;
+    }
+
+    public double getTravelDistance(LongLat longLat2, ArrayList<ArrayList<Line2D>> confinementZone, ArrayList<LongLat> landmarks) {
+        double distance = 0;
+        if (this.crossesConfineZone(longLat2, confinementZone)) {
+            LongLat closestLandmark = this.getClosestLandmark(longLat2, confinementZone, landmarks);
+            distance += this.distanceTo(closestLandmark) + closestLandmark.distanceTo(longLat2);
+        } else {
+            distance += this.distanceTo(longLat2);
+        }
+        return distance;
+    }
+
+    public ArrayList<LongLat> getPath(LongLat longLat2, ArrayList<ArrayList<Line2D>> confinementZone, ArrayList<LongLat> landmarks) {
+        ArrayList<LongLat> path = new ArrayList<>();
+        if (this.crossesConfineZone(longLat2, confinementZone)) {
+            LongLat closestLandmark = this.getClosestLandmark(longLat2, confinementZone, landmarks);
+            path.add(closestLandmark);
+            path.add(longLat2);
+        } else {
+            path.add(longLat2);
+        }
+        return path;
     }
 
     @Override

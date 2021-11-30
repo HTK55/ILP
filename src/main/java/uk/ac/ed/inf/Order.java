@@ -1,6 +1,8 @@
 package uk.ac.ed.inf;
 
 import java.util.ArrayList;
+import java.util.Objects;
+import java.util.TreeMap;
 
 public class Order {
     private String orderNo;
@@ -10,7 +12,6 @@ public class Order {
     private LongLat deliveredTo;
     private String w3wLocation;
     private int costInPence;
-    //private double distanceCost; maybe
 
     public Order(String orderNo, LongLat deliveredTo, String w3wLocation) {
         this.orderNo = orderNo;
@@ -33,8 +34,6 @@ public class Order {
     public void setCostInPence(int costInPence) {
         this.costInPence = costInPence;
     }
-
-
 
     public String getOrderNo() {
         return orderNo;
@@ -63,4 +62,5 @@ public class Order {
     public int getCostInPence() {
         return costInPence;
     }
+
 }

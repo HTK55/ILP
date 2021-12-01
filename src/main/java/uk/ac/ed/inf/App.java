@@ -1,63 +1,103 @@
 package uk.ac.ed.inf;
 
 
+import com.mapbox.geojson.*;
+
 import java.awt.geom.Line2D;
-import java.net.http.HttpClient;
+import java.io.BufferedWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.sql.Date;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
 public class App
 {
-    public static final HttpClient client = HttpClient.newHttpClient();
-    public static final LongLat APPLETONTOWER = new LongLat(-3.186874, 55.944494);
-    public static final LongLat businessSchool = new LongLat(-3.1873,55.9430);
-    public static final LongLat greyfriarsKirkyard = new LongLat(-3.1928,55.9469);
+    public static final LongLat APPLETON_TOWER = new LongLat(-3.186874, 55.944494);
 
     public static void main(String[] args) {
         //Date date = Date.valueOf((args[0]+"-"+args[1]+"-"+args[2]));
         //String websitePort = args[3];
-        //String DerbyPort = args[4];
-        String date1 = "2023-12-31";
-        Derby derbyClient = new Derby("localhost","1527");
-        Website websiteClient = new Website("localhost","9898",client);
-        ArrayList<Order> orders = derbyClient.getOrdersForDate(Date.valueOf(date1),websiteClient);
+        //String derbyPort = args[4];
+        Date date = Date.valueOf("2023-11-30");
+        String websitePort = "9898";
+        String derbyPort = "1527";
+        Derby derbyClient = new Derby("localhost", derbyPort);
+        Website websiteClient = new Website("localhost",websitePort);
+        ArrayList<Order> orders = derbyClient.getOrdersForDate(date,websiteClient);
         ArrayList<ArrayList<Line2D>> confinementZone = websiteClient.getConfinementZone();
         ArrayList<LongLat> landmarks =  websiteClient.getLandmarks();
-        ArrayList<String> shopNames = new ArrayList<>();
-        ArrayList<Shop> shops = new ArrayList<>();
+        HashMap<String,Shop> shops = new HashMap<>();
+        System.out.println(orders.size());
         for (Order order : orders) {
             derbyClient.getItemsForOrderNo(order);
             websiteClient.getDeliveryDetails(order);
-            for (int i = 0; i < order.getShops().size(); i++) {
-                if (!shopNames.contains(order.getShops().get(i))) {
-                    shopNames.add(order.getShops().get(i));
-                    Shop shop = new Shop(order.getShops().get(i), order.getDeliveredFrom().get(i));
+            for (String shopName : order.getShops().keySet()) {
+                if (!shops.containsKey(shopName)) {
+                    Shop shop = new Shop(shopName, order.getShops().get(shopName));
                     shop.addOrder(order, confinementZone, landmarks);
-                    shops.add(shop);
+                    shops.put(shopName,shop);
+                }
+                else {
+                    shops.get(shopName).addOrder(order, confinementZone, landmarks);
                 }
             }
         }
 
-        Drone drone = new Drone(APPLETONTOWER, orders, shops);
-        while (drone.getMovesLeft() > drone.movesToAppleton(confinementZone, landmarks)) {
-            Shop closestShop = drone.getClosestShop(confinementZone, landmarks);
-            Order completedOrder = closestShop.getOrders().get(closestShop.getOrders().firstKey());
-            drone.moveTo(closestShop.getLocation(), completedOrder, derbyClient);
-            ArrayList<LongLat> path = closestShop.getPaths().get(closestShop.getPaths().firstKey());
-            for (LongLat location : path) {
-                drone.moveTo(location, completedOrder, derbyClient); //add add to flightpath database in derby and implement in move
-                drone.nextPosition(-999);
+        for (Order i : orders) {
+            System.out.println(i.getW3wLocation());
+        }
+
+        Drone drone = new Drone(APPLETON_TOWER, orders, shops);
+        while (drone.getMovesLeft() > drone.movesToAppleton(confinementZone, landmarks) + 40) {
+            //System.out.println(drone.getMovesLeft());
+            //System.out.println(drone.movesToAppleton(confinementZone, landmarks)+'\n');
+            Shop bestShop = drone.getBestShop(confinementZone, landmarks);
+            if (bestShop.getName().equals("Appleton Tower")) {
+                break;
             }
-            drone.addCompletedOrder(completedOrder);
-            //add add to deliveries database in derby and execute here
-            drone.removeOrder(completedOrder);
-            for (Shop shop : shops) {
-                shop.removeOrder(completedOrder);
+            else {
+                Order completedOrder = bestShop.getOrders().firstEntry().getValue(); //closestShop.getOrders().get(closestShop.getOrders().firstKey());
+                ArrayList<LongLat> pathToShop = drone.getCurrLoc().getPath(bestShop.getLocation(), confinementZone, landmarks);
+                drone.moveTo(pathToShop, completedOrder, derbyClient, landmarks);
+                ArrayList<LongLat> path = bestShop.getPaths().firstEntry().getValue(); //closestShop.getPaths().get(closestShop.getPaths().firstKey());
+                drone.moveTo(path, completedOrder, derbyClient, landmarks);//add to flightpath
+                System.out.println("Completed: "+completedOrder.getOrderNo());
+                drone.addCompletedOrder(completedOrder);
+                //add add to deliveries database in derby and execute here
+                drone.removeOrder(completedOrder);
+                drone.removeOrderFromShops(completedOrder);
             }
         }
-        Order home = new Order("Return Home", APPLETONTOWER, "n/a");
-        drone.moveTo(APPLETONTOWER, home, derbyClient);
+        System.out.println(drone.getCompletedOrders().size());
+        System.out.println(drone.getMovesLeft());
+        Order home = new Order("Return Home", APPLETON_TOWER, "n/a");
+        ArrayList<LongLat> pathHome = drone.getCurrLoc().getPath(APPLETON_TOWER, confinementZone, landmarks);
+        drone.moveTo(pathHome, home, derbyClient, landmarks);
+        //System.out.println(drone.getMovesLeft());
+        ArrayList<Point> points = new ArrayList<>();
+        for (LongLat longLat : drone.getBeenTo()) {
+            Point point = Point.fromLngLat(longLat.getLongitude(),longLat.getLatitude());
+            points.add(point);
+        }
+        LineString lineString = LineString.fromLngLats(points);
+        Feature feature = Feature.fromGeometry((Geometry)lineString);
+        FeatureCollection featureCollection = FeatureCollection.fromFeature(feature);
+        String json = featureCollection.toJson();
+
+        final Path path = Paths.get("test7.geojson");
+
+        try (final BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8, StandardOpenOption.CREATE)) {
+            writer.write(json);
+            writer.flush();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
 
         // publish file
 

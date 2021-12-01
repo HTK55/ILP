@@ -1,16 +1,14 @@
 package uk.ac.ed.inf;
 
-import java.util.ArrayList;
-import java.util.Objects;
-import java.util.TreeMap;
+import java.util.*;
 
 public class Order {
-    private String orderNo;
+    private final String orderNo;
     private ArrayList<String> itemsOrdered;
     private ArrayList<LongLat> deliveredFrom;
-    private ArrayList<String> shops;
-    private LongLat deliveredTo;
-    private String w3wLocation;
+    private HashMap<String, LongLat> shops;
+    private final LongLat deliveredTo;
+    private final String w3wLocation;
     private int costInPence;
 
     public Order(String orderNo, LongLat deliveredTo, String w3wLocation) {
@@ -27,7 +25,7 @@ public class Order {
         this.deliveredFrom = deliveredFrom;
     }
 
-    public void setShops(ArrayList<String> shops) {
+    public void setShops(HashMap<String, LongLat> shops) {
         this.shops = shops;
     }
 
@@ -43,7 +41,7 @@ public class Order {
         return itemsOrdered;
     }
 
-    public ArrayList<String> getShops() {
+    public HashMap<String, LongLat> getShops() {
         return shops;
     }
 
@@ -63,4 +61,16 @@ public class Order {
         return costInPence;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Order order = (Order) o;
+        return costInPence == order.costInPence && Objects.equals(orderNo, order.orderNo) && Objects.equals(itemsOrdered, order.itemsOrdered) && Objects.equals(deliveredFrom, order.deliveredFrom) && Objects.equals(shops, order.shops) && Objects.equals(deliveredTo, order.deliveredTo) && Objects.equals(w3wLocation, order.w3wLocation);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(orderNo, itemsOrdered, deliveredFrom, shops, deliveredTo, w3wLocation, costInPence);
+    }
 }

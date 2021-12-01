@@ -13,6 +13,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,10 +23,10 @@ public class Website {
 
     // Standard delivery charge for orders
     static final int STD_CHARGE = 50;
+    static final HttpClient client = HttpClient.newHttpClient();
 
     public final String name;
     public final String port;
-    public final HttpClient client;
 
     /**
      * Class constructor.
@@ -32,10 +34,9 @@ public class Website {
      * @param name the name of the machine
      * @param port the port where the webserver is running
      */
-    public Website(String name, String port, HttpClient client) {
+    public Website(String name, String port) {
         this.name = name;
         this.port = port;
-        this.client = client;
     }
 
     public ArrayList<ArrayList<Line2D>> getConfinementZone() {
@@ -43,13 +44,13 @@ public class Website {
         HttpRequest request = HttpRequest.newBuilder().uri(URI.create(urlString)).build();
         ArrayList<ArrayList<Line2D>> confinementZone = new ArrayList<>();
         try {
-            HttpResponse<String> response = this.client.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             FeatureCollection features = FeatureCollection.fromJson(response.body());
             for (Feature feature : features.features()) {
                 ArrayList<Line2D> polygonInLines = new ArrayList<>();
                 com.mapbox.geojson.Polygon polygon = (Polygon) feature.geometry();
                 List<List<Point>> listPoints = polygon.coordinates();
-                List<Point> points = listPoints.stream().flatMap(x -> x.stream()).collect(Collectors.toList());
+                List<Point> points = listPoints.stream().flatMap(Collection::stream).collect(Collectors.toList());
                 for (int i = 0; i < (points.size()-1); i++) {
                     Line2D line = new Line2D.Double(points.get(i).longitude(),points.get(i).latitude(),points.get(i+1).longitude(),points.get(i+1).latitude());
                     polygonInLines.add(line);
@@ -68,7 +69,7 @@ public class Website {
         HttpRequest request = HttpRequest.newBuilder().uri(URI.create(urlString)).build();
         ArrayList<LongLat> landmarks = new ArrayList<>();
         try {
-            HttpResponse<String> response = this.client.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             FeatureCollection features = FeatureCollection.fromJson(response.body());
             for (Feature feature : features.features()) {
                 com.mapbox.geojson.Point point = (Point) feature.geometry();
@@ -93,11 +94,11 @@ public class Website {
     public void getDeliveryDetails(Order order) {
         int cost = STD_CHARGE;
         ArrayList<LongLat> deliveredFrom = new ArrayList<>();
-        ArrayList<String> shopNames = new ArrayList<>();
+        HashMap<String, LongLat> shopNames = new HashMap<>();
         String urlString = "http://"+this.name+":"+this.port+"/menus/menus.json";
         HttpRequest request = HttpRequest.newBuilder().uri(URI.create(urlString)).build();
         try {
-            HttpResponse<String> response = this.client.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             List<ShopGson> shops = new Gson().fromJson(response.body(), new TypeToken<List<ShopGson>>() {}.getType());
             for (String item : order.getItemsOrdered()) {
                 for (ShopGson shop : shops) {
@@ -114,7 +115,7 @@ public class Website {
 
                             if (!deliveredFrom.contains(location)) {
                                 deliveredFrom.add(location);
-                                shopNames.add(shopName);
+                                shopNames.put(shopName,location);
                             }
                         }
                     }
@@ -133,7 +134,7 @@ public class Website {
         String urlString = "http://"+this.name+":"+this.port+"/words/"+first+"/"+second+"/"+third+"/details.json";
         HttpRequest request = HttpRequest.newBuilder().uri(URI.create(urlString)).build();
         try {
-            HttpResponse<String> response = this.client.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             W3WDetails details = new Gson().fromJson(response.body(), new TypeToken<W3WDetails>(){}.getType());
             return new LongLat(details.getCoordinates().getLng(),details.getCoordinates().getLat());
         }

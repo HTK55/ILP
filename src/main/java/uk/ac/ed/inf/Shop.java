@@ -2,7 +2,6 @@ package uk.ac.ed.inf;
 
 import java.awt.geom.Line2D;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.TreeMap;
 
 /**
@@ -12,14 +11,16 @@ import java.util.TreeMap;
 public class Shop {
     private final String name;
     private final LongLat location;
-    private TreeMap<Integer,Order> orders;
-    private TreeMap<Integer,ArrayList<LongLat>> paths;
+    private final TreeMap<Integer,Order> orders;
+    private final TreeMap<String,Integer> reverseOrders;
+    private final TreeMap<Integer,ArrayList<LongLat>> paths;
 
     public Shop(String name, LongLat location) {
         this.name = name;
         this.location = location;
-        this.orders = new TreeMap<Integer,Order>();
-        this.paths = new TreeMap<Integer,ArrayList<LongLat>>();
+        this.orders = new TreeMap<>();
+        this.reverseOrders = new TreeMap<>();
+        this.paths = new TreeMap<>();
     }
 
     public void addOrder(Order order, ArrayList<ArrayList<Line2D>> confinementZone, ArrayList<LongLat> landmarks) {
@@ -27,37 +28,33 @@ public class Shop {
         ArrayList<LongLat> path = new ArrayList<>();
         for (LongLat loc : order.getDeliveredFrom()) { //only 1 or 2 long so could be if statement but left in for expandability
             if (!loc.equals(this.getLocation())) { // if we wanted to add more shops, would use a treemap to sort by each distance from current shop, then calculate the paths and total distance
-                distance += this.getLocation().getTravelDistance(loc, confinementZone, landmarks);
+                distance = distance + this.getLocation().getTravelDistance(loc, confinementZone, landmarks) + 0.00015; //have to hover
                 ArrayList<LongLat> locPaths = this.getLocation().getPath(loc, confinementZone, landmarks);
-                if (locPaths.size() == 1) {
-                    path.add(locPaths.get(0));
-                } else {
-                    for (LongLat locPath : locPaths) {
-                        path.add(locPath);
-                    }
-                }
+                path.addAll(locPaths);
             }
         }
-        ArrayList<LongLat> lastPaths = path.get(path.size() - 1).getPath(order.getDeliveredTo(), confinementZone, landmarks);
-        if (lastPaths.size() == 1) {
-            path.add(lastPaths.get(0));
+        ArrayList<LongLat> lastPaths;
+        if (path.isEmpty()) {
+            distance = distance + this.getLocation().getTravelDistance(order.getDeliveredTo(), confinementZone, landmarks) + 0.00015;
+            lastPaths = this.getLocation().getPath(order.getDeliveredTo(), confinementZone, landmarks);
         }
         else {
-            for (LongLat lastPath : lastPaths) {
-                path.add(lastPath);
-            }
+            distance = distance + path.get(path.size() - 1).getTravelDistance(order.getDeliveredTo(), confinementZone, landmarks) + 0.00015;
+            lastPaths = path.get(path.size() - 1).getPath(order.getDeliveredTo(), confinementZone, landmarks);
         }
-        Integer travelCost = (int)distance/order.getCostInPence();
-        this.orders.put((int)travelCost,order);
-        this.paths.put((int)travelCost,path);
+        path.addAll(lastPaths);
+        double travelCost = distance/order.getCostInPence();
+        travelCost = travelCost * 1000000000;
+        this.orders.put((int)travelCost, order);
+        this.reverseOrders.put(order.getOrderNo(), (int)travelCost);
+        this.paths.put((int)travelCost, path);
     }
 
     public void removeOrder(Order order) {
-        for( Map.Entry<Integer,Order> entry : this.getOrders().entrySet()){
-            if (entry.getValue().equals(order)) {
-                this.orders.remove(entry.getKey());
-                this.paths.remove(entry.getKey());
-            }
+        if (reverseOrders.containsKey(order.getOrderNo())) {
+            Integer key = reverseOrders.get(order.getOrderNo());
+            this.orders.remove(key);
+            this.paths.remove(key);
         }
     }
 

@@ -17,17 +17,11 @@ public class LongLat {
     // the lower latitude boundary of the confinement zone
     static final double LOWER_LAT = 55.942617;
 
-    // the angle key to set the drone to hover, essentially a value we would never legitimately input to move the drone in that direction
-    static final int HOVER = -999;
-
     // the distance tolerance in degrees, specifically a point is close to another point if the distance between them is strictly less than this value
     static final double DIST_TOL = 0.00015;
 
-    // the length of a drone move in degrees in a straight line
-    static final double DIST_MOVED = 0.00015;
-
-    private double longitude;
-    private double latitude;
+    private final double longitude;
+    private final double latitude;
 
     /**
      * Class constructor.
@@ -78,29 +72,6 @@ public class LongLat {
         return (this.distanceTo(longLat2) < DIST_TOL);
     }
 
-    /**
-     * Calculates the next position of the drone when given an angle. We use the convention that 0 means go East,
-     * 90 means go North, 180 means go West, and 270 means go South, with the other multiples of ten between 0 and
-     * 350 representing the obvious directions between these four major compass directions. The angle can also be
-     * set as the HOVER constant, which we use if we want the drone to hover in place. Throws an exception if the input
-     * angle is not valid.
-     *
-     * @param angle the direction we want the drone to move in, must be either the HOVER constant or a multiple of 10 between 0 and 350
-     * @return a new LongLat object at the position the drone is in after the move
-     * @throws IllegalArgumentException if the angle given is not valid
-     */
-    public LongLat nextPosition(int angle) {
-        if (angle == HOVER) {
-            return this;
-        } else if (angle >= 0 && angle <= 350 && angle % 10 == 0) {
-            double angleInRadians = Math.toRadians(angle);
-            double newLongitude = this.longitude + Math.cos(angleInRadians) * DIST_MOVED;
-            double newLatitude = this.latitude + Math.sin(angleInRadians) * DIST_MOVED;
-            return new LongLat(newLongitude, newLatitude);
-        } else {
-            throw new IllegalArgumentException("This is not a valid angle");
-        }
-    }
 
     public boolean crossesConfineZone(LongLat longLat2, ArrayList<ArrayList<Line2D>> confinementZone) {
         Line2D move = new Line2D.Double(this.longitude,this.latitude,longLat2.longitude,longLat2.latitude);
@@ -115,16 +86,16 @@ public class LongLat {
     }
 
     public LongLat getClosestLandmark(LongLat longLat2, ArrayList<ArrayList<Line2D>> confinementZone, ArrayList<LongLat> landmarks) {
-        LongLat closest = landmarks.get(0);
-        double smallestDist = this.distanceTo(landmarks.get(0)) + landmarks.get(0).distanceTo(longLat2);
+        LongLat closest = null; //won't work if can't reach any
+        double smallestDist = 1000000000;
         for (LongLat landmark : landmarks) { //again only 2 long, but left in in case we want to add more landmarks
             double distance = this.distanceTo(landmark) + landmark.distanceTo(longLat2);
-            if (distance < smallestDist && !this.crossesConfineZone(landmark, confinementZone)) {
+            if (distance < smallestDist && !this.crossesConfineZone(landmark, confinementZone) && !landmark.crossesConfineZone(longLat2, confinementZone)) {
                 smallestDist = distance;
                 closest = landmark;
             }
         }
-        return closest;
+        return closest; // if null is not reachable
     }
 
     public double getTravelDistance(LongLat longLat2, ArrayList<ArrayList<Line2D>> confinementZone, ArrayList<LongLat> landmarks) {
@@ -143,10 +114,8 @@ public class LongLat {
         if (this.crossesConfineZone(longLat2, confinementZone)) {
             LongLat closestLandmark = this.getClosestLandmark(longLat2, confinementZone, landmarks);
             path.add(closestLandmark);
-            path.add(longLat2);
-        } else {
-            path.add(longLat2);
         }
+        path.add(longLat2);
         return path;
     }
 

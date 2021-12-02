@@ -106,7 +106,7 @@ public class App
         FeatureCollection featureCollection = FeatureCollection.fromFeature(feature);
         String json = featureCollection.toJson();
 
-        final Path path = Paths.get("drone"+args[0]+"-"+args[1]+"-"+args[2]+".geojson");
+        final Path path = Paths.get("drone-"+args[0]+"-"+args[1]+"-"+args[2]+".geojson");
 
         try (final BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8, StandardOpenOption.CREATE)) {
             writer.write(json);

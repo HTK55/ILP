@@ -18,15 +18,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * The Website class, used to interface with the web server. Contains methods to obtain and process the information
+ * accessed stored on the website.
+ */
 public class Website {
-    // HttpClient for http requests (should be moved to a higher file when implementing Menus http requests in future classes, as should only be one)
-
-    // Standard delivery charge for orders
+    /**
+     * Standard delivery charge for orders
+     */
     static final int STD_CHARGE = 50;
+    /**
+     * Static client for accessing the website
+     */
     static final HttpClient client = HttpClient.newHttpClient();
+
 
     public final String name;
     public final String port;
+    private ArrayList<GsonShop> shops;
 
     /**
      * Class constructor.
@@ -39,10 +48,35 @@ public class Website {
         this.port = port;
     }
 
-    public ArrayList<ArrayList<Line2D>> getConfinementZone() {
+    /**
+     * Gets all the information about the shops from the website, including processing the items into HashMaps for easy
+     * access later.
+     */
+    public void getShops() {
+        String urlString = "http://" + this.name + ":" + this.port + "/menus/menus.json";
+        HttpRequest request = HttpRequest.newBuilder().uri(URI.create(urlString)).build();
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            ArrayList<GsonShop> shops = new Gson().fromJson(response.body(), new TypeToken<ArrayList<GsonShop>>() {}.getType());
+            for (GsonShop shop : shops) {
+                shop.setHashMap();
+            }
+            this.shops = shops;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Gets the details of the current no fly zone from the website and turns it from geojson polygons into lists of
+     * java Line2Ds for easy calculation later.
+     *
+     * @return the lists of Line2Ds of the no fly zone
+     */
+    public ArrayList<ArrayList<Line2D>> getNoFlyZone() {
         String urlString = "http://"+this.name+":"+this.port+"/buildings/no-fly-zones.geojson";
         HttpRequest request = HttpRequest.newBuilder().uri(URI.create(urlString)).build();
-        ArrayList<ArrayList<Line2D>> confinementZone = new ArrayList<>();
+        ArrayList<ArrayList<Line2D>> noFlyZone = new ArrayList<>();
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             FeatureCollection features = FeatureCollection.fromJson(response.body());
@@ -57,15 +91,20 @@ public class Website {
                     Line2D line = new Line2D.Double(points.get(i).longitude(),points.get(i).latitude(),points.get(i+1).longitude(),points.get(i+1).latitude());
                     polygonInLines.add(line);
                 }
-                confinementZone.add(polygonInLines);
+                noFlyZone.add(polygonInLines);
             }
         }
         catch (Exception e) {
             e.printStackTrace();
         }
-        return confinementZone;
+        return noFlyZone;
     }
 
+    /**
+     * Gets the current list of landmarks from the website.
+     *
+     * @return a list of LongLat locations of all the landmarks
+     */
     public ArrayList<LongLat> getLandmarks() {
         String urlString = "http://"+this.name+":"+this.port+"/buildings/landmarks.geojson";
         HttpRequest request = HttpRequest.newBuilder().uri(URI.create(urlString)).build();
@@ -88,51 +127,47 @@ public class Website {
     }
 
     /**
-     * Calculates the delivery cost when given some a set of items to be ordered. This is calculated by adding the
-     * standard delivery cost to the price of the items, which we get by accessing the webserver. Fails if the server
-     * cannot be accessed.
+     * Gets the shops, and LongLat locations of those shops, an order needs to be picked up from and calculates the cost
+     * of the order's delivery.
      *
-     * @param order the items wanting to be delivered
+     * @param order the Order we want the details of
      */
     public void getDeliveryDetails(Order order) {
         int cost = STD_CHARGE;
         ArrayList<LongLat> deliveredFrom = new ArrayList<>();
         HashMap<String, LongLat> shopNames = new HashMap<>();
-        String urlString = "http://"+this.name+":"+this.port+"/menus/menus.json";
-        HttpRequest request = HttpRequest.newBuilder().uri(URI.create(urlString)).build();
-        try {
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            List<GsonShop> shops = new Gson().fromJson(response.body(), new TypeToken<List<GsonShop>>() {}.getType());
-            for (String item : order.getItemsOrdered()) {
-                for (GsonShop shop : shops) {
-                    for (GsonMenuItem menuItem : shop.getMenu()) {
-                        if (menuItem.getItem().equals(item)) { //reason for hashmap
-                            cost += menuItem.getPence();
-                            String[] threeWords = shop.getLocation().split("\\.");
-                            //Add error
-                            String first = threeWords[0];
-                            String second = threeWords[1];
-                            String third = threeWords[2];
-                            LongLat location = getLongLatFromWords(first, second, third);
-                            String shopName = shop.getName();
+        for (String item : order.getItemsOrdered()) {
+            for (GsonShop shop : this.shops) {
+                if (shop.getItems().containsKey(item)) {
+                    cost += shop.getItems().get(item);
+                    String[] threeWords = shop.getLocation().split("\\.");
+                    //Add error
+                    String first = threeWords[0];
+                    String second = threeWords[1];
+                    String third = threeWords[2];
+                    LongLat location = getLongLatFromWords(first, second, third);
+                    String shopName = shop.getName();
 
-                            if (!deliveredFrom.contains(location)) {
-                                deliveredFrom.add(location);
-                                shopNames.put(shopName,location);
-                            }
-                        }
+                    if (!deliveredFrom.contains(location)) {
+                        deliveredFrom.add(location);
+                        shopNames.put(shopName, location);
                     }
                 }
             }
-            order.setCostInPence(cost);
-            order.setDeliveredFrom(deliveredFrom);
-            order.setShops(shopNames);
         }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
+        order.setCostInPence(cost);
+        order.setDeliveredFrom(deliveredFrom);
+        order.setShops(shopNames);
     }
 
+    /**
+     * Obtains the LongLat location of a what3words location as stored on the website.
+     *
+     * @param first first word of w3w location
+     * @param second second word of w3w location
+     * @param third third word of w3w location
+     * @return LongLat location
+     */
     public LongLat getLongLatFromWords(String first, String second, String third) {
         String urlString = "http://"+this.name+":"+this.port+"/words/"+first+"/"+second+"/"+third+"/details.json";
         HttpRequest request = HttpRequest.newBuilder().uri(URI.create(urlString)).build();

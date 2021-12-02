@@ -2,15 +2,35 @@ package uk.ac.ed.inf;
 
 import java.util.*;
 
+/**
+ *  The Order class, used to collect and store all the information about each order the drone must deliver.
+ */
 public class Order {
     private final String orderNo;
     private ArrayList<String> itemsOrdered;
+    /**
+     * List of LongLat locations of the shops the order needs to be delivered from
+     */
     private ArrayList<LongLat> deliveredFrom;
+    /**
+     * HashMap of shop names and their corresponding LongLat location the order is delivered from
+     */
     private HashMap<String, LongLat> shops;
     private final LongLat deliveredTo;
     private final String w3wLocation;
+    /**
+     * Cost of the order
+     */
     private int costInPence;
 
+
+    /**
+     * Class constructor.
+     *
+     * @param orderNo order number
+     * @param deliveredTo LongLat location the order must be delivered to
+     * @param w3wLocation w3w location the order must be delivered to
+     */
     public Order(String orderNo, LongLat deliveredTo, String w3wLocation) {
         this.orderNo = orderNo;
         this.deliveredTo = deliveredTo;
@@ -66,11 +86,11 @@ public class Order {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Order order = (Order) o;
-        return costInPence == order.costInPence && Objects.equals(orderNo, order.orderNo) && Objects.equals(itemsOrdered, order.itemsOrdered) && Objects.equals(deliveredFrom, order.deliveredFrom) && Objects.equals(shops, order.shops) && Objects.equals(deliveredTo, order.deliveredTo) && Objects.equals(w3wLocation, order.w3wLocation);
+        return Objects.equals(orderNo, order.orderNo);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(orderNo, itemsOrdered, deliveredFrom, shops, deliveredTo, w3wLocation, costInPence);
+        return Objects.hash(orderNo);
     }
 }

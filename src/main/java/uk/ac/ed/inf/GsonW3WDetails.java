@@ -1,8 +1,8 @@
 package uk.ac.ed.inf;
 
 /**
- * A class used for Gson parsing the information on each shop from the webserver. Contains the name of a shop, the
- * what3words location of the shop and a list of menu items the shop offers.
+ * A class used for Gson parsing the information about a what3words location from the webserver. Defines a place to set
+ * the coordinates of a json file from on the what3words location.
  */
 public class GsonW3WDetails {
     private final GsonCoordinates coordinates;

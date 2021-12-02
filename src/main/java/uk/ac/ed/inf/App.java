@@ -47,37 +47,36 @@ public class App
                 }
             }
         }
+        derbyClient.createFlightpath();
+        derbyClient.createDeliveries();
 
-        for (Order i : orders) {
-            System.out.println(i.getW3wLocation());
-        }
-
-        Drone drone = new Drone(APPLETON_TOWER, orders, shops);
-        while (drone.getMovesLeft() > drone.movesToAppleton(confinementZone, landmarks) + 40) {
+        Drone drone = new Drone(APPLETON_TOWER, orders, shops, derbyClient);
+        drone.setConfinementZone(confinementZone);
+        drone.setLandmarks(landmarks);
+        while (drone.getMovesLeft() > drone.movesToAppleton() + 35) {
             //System.out.println(drone.getMovesLeft());
             //System.out.println(drone.movesToAppleton(confinementZone, landmarks)+'\n');
-            Shop bestShop = drone.getBestShop(confinementZone, landmarks);
+            Shop bestShop = drone.getBestShop();
             if (bestShop.getName().equals("Appleton Tower")) {
                 break;
             }
             else {
                 Order completedOrder = bestShop.getOrders().firstEntry().getValue(); //closestShop.getOrders().get(closestShop.getOrders().firstKey());
                 ArrayList<LongLat> pathToShop = drone.getCurrLoc().getPath(bestShop.getLocation(), confinementZone, landmarks);
-                drone.moveTo(pathToShop, completedOrder, derbyClient, landmarks);
+                drone.moveTo(pathToShop, completedOrder);
                 ArrayList<LongLat> path = bestShop.getPaths().firstEntry().getValue(); //closestShop.getPaths().get(closestShop.getPaths().firstKey());
-                drone.moveTo(path, completedOrder, derbyClient, landmarks);//add to flightpath
-                System.out.println("Completed: "+completedOrder.getOrderNo());
+                drone.moveTo(path, completedOrder);//add to flightpath
                 drone.addCompletedOrder(completedOrder);
-                //add add to deliveries database in derby and execute here
+                derbyClient.addToDeliveries(completedOrder);
                 drone.removeOrder(completedOrder);
                 drone.removeOrderFromShops(completedOrder);
             }
         }
         System.out.println(drone.getCompletedOrders().size());
         System.out.println(drone.getMovesLeft());
-        Order home = new Order("Return Home", APPLETON_TOWER, "n/a");
+        Order home = new Order("RtrnHome", APPLETON_TOWER, "n/a");
         ArrayList<LongLat> pathHome = drone.getCurrLoc().getPath(APPLETON_TOWER, confinementZone, landmarks);
-        drone.moveTo(pathHome, home, derbyClient, landmarks);
+        drone.moveTo(pathHome, home);
         //System.out.println(drone.getMovesLeft());
         ArrayList<Point> points = new ArrayList<>();
         for (LongLat longLat : drone.getBeenTo()) {
@@ -118,21 +117,5 @@ public class App
         // Return completed deliveries database
 
         System.out.println( "It Runs!" );
-    }
-
-
-    public class Flightpath {
-        private char orderNo;
-        private double fromLongitude;
-        private double fromLatitude;
-        private int angle;
-        private double toLongitude;
-        private double toLatitude;
-    }
-
-    public class Delivery {
-        private char orderNo;
-        private char deliveredTo;
-        private int costInPence;
     }
 }

@@ -46,9 +46,11 @@ public class Website {
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             FeatureCollection features = FeatureCollection.fromJson(response.body());
+            assert features.features() != null;
             for (Feature feature : features.features()) {
                 ArrayList<Line2D> polygonInLines = new ArrayList<>();
                 com.mapbox.geojson.Polygon polygon = (Polygon) feature.geometry();
+                assert polygon != null;
                 List<List<Point>> listPoints = polygon.coordinates();
                 List<Point> points = listPoints.stream().flatMap(Collection::stream).collect(Collectors.toList());
                 for (int i = 0; i < (points.size()-1); i++) {
@@ -71,8 +73,10 @@ public class Website {
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             FeatureCollection features = FeatureCollection.fromJson(response.body());
+            assert features.features() != null;
             for (Feature feature : features.features()) {
                 com.mapbox.geojson.Point point = (Point) feature.geometry();
+                assert point != null;
                 LongLat longLat = new LongLat(point.longitude(),point.latitude());
                 landmarks.add(longLat);
             }
@@ -89,7 +93,6 @@ public class Website {
      * cannot be accessed.
      *
      * @param order the items wanting to be delivered
-     * @return the delivery cost in pence for the items ordered, if no items are available to be ordered, returns 0
      */
     public void getDeliveryDetails(Order order) {
         int cost = STD_CHARGE;
@@ -99,10 +102,10 @@ public class Website {
         HttpRequest request = HttpRequest.newBuilder().uri(URI.create(urlString)).build();
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            List<ShopGson> shops = new Gson().fromJson(response.body(), new TypeToken<List<ShopGson>>() {}.getType());
+            List<GsonShop> shops = new Gson().fromJson(response.body(), new TypeToken<List<GsonShop>>() {}.getType());
             for (String item : order.getItemsOrdered()) {
-                for (ShopGson shop : shops) {
-                    for (MenuItem menuItem : shop.getMenu()) {
+                for (GsonShop shop : shops) {
+                    for (GsonMenuItem menuItem : shop.getMenu()) {
                         if (menuItem.getItem().equals(item)) { //reason for hashmap
                             cost += menuItem.getPence();
                             String[] threeWords = shop.getLocation().split("\\.");
@@ -135,7 +138,7 @@ public class Website {
         HttpRequest request = HttpRequest.newBuilder().uri(URI.create(urlString)).build();
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            W3WDetails details = new Gson().fromJson(response.body(), new TypeToken<W3WDetails>(){}.getType());
+            GsonW3WDetails details = new Gson().fromJson(response.body(), new TypeToken<GsonW3WDetails>(){}.getType());
             return new LongLat(details.getCoordinates().getLng(),details.getCoordinates().getLat());
         }
         catch (Exception e) {

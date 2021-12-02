@@ -39,19 +39,11 @@ public class Derby {
         }
     }
 
-    public Connection getConn() {
-        return conn;
-    }
-
-    public Statement getStatement() {
-        return statement;
-    }
-
     public ArrayList<Order> getOrdersForDate(Date date, Website website) {
         ArrayList<Order> orderList = new ArrayList<>();
         try {
             final String ordersQuery = "select * from orders where deliveryDate=(?)";
-            PreparedStatement psOrderQuery = this.getConn().prepareStatement(ordersQuery);
+            PreparedStatement psOrderQuery = this.conn.prepareStatement(ordersQuery);
             psOrderQuery.setDate(1, date);
             ResultSet resultSet = psOrderQuery.executeQuery();
             while (resultSet.next()) {
@@ -76,7 +68,7 @@ public class Derby {
         ArrayList<String> itemList = new ArrayList<>();
         try {
             final String ordersQuery = "select * from orderDetails where orderNo=(?)";
-            PreparedStatement psOrderQuery = this.getConn().prepareStatement(ordersQuery);
+            PreparedStatement psOrderQuery = this.conn.prepareStatement(ordersQuery);
             psOrderQuery.setString(1,order.getOrderNo());
             ResultSet resultSet = psOrderQuery.executeQuery();
             while (resultSet.next()) {
@@ -90,28 +82,57 @@ public class Derby {
         order.setItemsOrdered(itemList);
     }
 
-    public void createDeliveries() {
+    public void createFlightpath() {
         try {
-            DatabaseMetaData databaseMetadata = this.getConn().getMetaData();
-            ResultSet resultSet = databaseMetadata.getTables(null, null, "DELIVERIES", null);
+            DatabaseMetaData databaseMetadata = this.conn.getMetaData();
+            ResultSet resultSet = databaseMetadata.getTables(null, null, "FLIGHTPATH", null);
             if (resultSet.next()) {
-                this.getStatement().execute("drop table deliveries");
+                this.statement.execute("drop table flightpath");
             }
-            this.getStatement().execute("create table deliveries("+"orderNo char(8), "+"deliveredTo varchar(18), "+"costInPence int)");
+            this.statement.execute("create table flightpath("+"orderNo char(8), "+"fromLongitude double, "+"fromLatitude double, "+"angle integer,"+"toLongitude double, " +"toLatitude double)");
         }
         catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void createFlightpath() {
+    public void addToFlightPath(String orderNo, LongLat from, int angle, LongLat to) {
         try {
-            DatabaseMetaData databaseMetadata = this.getConn().getMetaData();
-            ResultSet resultSet = databaseMetadata.getTables(null, null, "FLIGHTPATH", null);
+            PreparedStatement psAddToFlightpath = this.conn.prepareStatement("insert into flightpath values (?, ?, ?, ?, ?, ?)");
+            psAddToFlightpath.setString(1, orderNo);
+            psAddToFlightpath.setDouble(2, from.getLongitude());
+            psAddToFlightpath.setDouble(3, from.getLatitude());
+            psAddToFlightpath.setInt(4, angle);
+            psAddToFlightpath.setDouble(5, to.getLongitude());
+            psAddToFlightpath.setDouble(6, to.getLatitude());
+            psAddToFlightpath.execute();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void createDeliveries() {
+        try {
+            DatabaseMetaData databaseMetadata = this.conn.getMetaData();
+            ResultSet resultSet = databaseMetadata.getTables(null, null, "DELIVERIES", null);
             if (resultSet.next()) {
-                this.getStatement().execute("drop table flightpath");
+                this.statement.execute("drop table deliveries");
             }
-            this.getStatement().execute("create table flightpath("+"orderNo char(8), "+"fromLongitude double, "+"costInPence int)");
+            this.statement.execute("create table deliveries("+"orderNo char(8), "+"deliveredTo varchar(18), "+"costInPence int)");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addToDeliveries(Order order) {
+        try {
+            PreparedStatement psAddToDeliveries = this.conn.prepareStatement("insert into deliveries values (?, ?, ?)");
+            psAddToDeliveries.setString(1, order.getOrderNo());
+            psAddToDeliveries.setString(2, order.getW3wLocation());
+            psAddToDeliveries.setInt(3, order.getCostInPence());
+            psAddToDeliveries.execute();
         }
         catch (Exception e) {
             e.printStackTrace();
